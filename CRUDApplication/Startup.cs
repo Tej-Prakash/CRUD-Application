@@ -1,18 +1,15 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using CRUDApplication.Models;
 using CRUDApplication.Interfaces.Interface;
 using CRUDApplication.Data.EmployeeDbContext;
 using CRUDApplication.Repositories.Repository;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
 
 namespace CRUDApplication
 {
@@ -34,6 +31,28 @@ namespace CRUDApplication
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
 );
            services.AddTransient<IEmployeeRepository, EmployeeRepository>();
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(o =>
+            {
+                var Key = Encoding.UTF8.GetBytes(Configuration["JWT:Key"]);
+                o.SaveToken = true;
+                o.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = Configuration["JWT:Issuer"],
+                    ValidAudience = Configuration["JWT:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Key)
+                };
+            });
+
+            services.AddSingleton<IJWTManagerRepository, JWTManagerRepository>();
+
             services.AddSingleton<employeedbContext>();
             services.AddControllers();
         }
@@ -47,6 +66,8 @@ namespace CRUDApplication
             }
 
             app.UseRouting();
+            app.UseAuthentication(); // This need to be added	
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

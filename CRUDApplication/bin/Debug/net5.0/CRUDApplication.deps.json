@@ -691,7 +691,8 @@
         "dependencies": {
           "CRUDApplication.Data": "1.0.0",
           "CRUDApplication.Interfaces": "1.0.0",
-          "CRUDApplication.Models": "1.0.0"
+          "CRUDApplication.Models": "1.0.0",
+          "Microsoft.AspNetCore.Authentication.JwtBearer": "5.0.5"
         },
         "runtime": {
           "CRUDApplication.Repositories.dll": {}

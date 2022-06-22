@@ -1,6 +1,7 @@
 ﻿using CRUDApplication.Interfaces.Interface;
 using CRUDApplication.Models;
 using CRUDApplication.Models.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -8,16 +9,36 @@ using System.Net;
 
 namespace CRUDApplication.Controllers
 {
-
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class EmployeeController : ControllerBase
     {
         private IEmployeeRepository _employeeRepository;
-        public EmployeeController(IEmployeeRepository employeeRepository)
+        private readonly IJWTManagerRepository _jWTManager;
+        //public EmployeeController()
+        //{
+           
+        //}
+        public EmployeeController(IEmployeeRepository employeeRepository, IJWTManagerRepository jWTManager)
         {
             _employeeRepository = employeeRepository;
-            //_employeeRepository = new EmployeeRepository(new employeedbContext());
+            _jWTManager = jWTManager;
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("authenticate")]
+        public IActionResult Authenticate(Users usersdata)
+        {
+            var token = _jWTManager.Authenticate(usersdata);
+
+            if (token == null)
+            {
+                return Unauthorized();
+            }
+
+            return Ok(token);
         }
 
         [Route("GetAllEmployees")]
@@ -99,6 +120,6 @@ namespace CRUDApplication.Controllers
             {
                 return BadRequest("Invalid employee id");
             }
-        }
+        }        
     }
 }
